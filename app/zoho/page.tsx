@@ -1,6 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
-import Script from 'next/script';
+import { useEffect, useState, useRef } from 'react';
 
 declare global {
   interface Window {
@@ -24,13 +23,39 @@ interface ZohoUser {
 
 export default function ZohoWidget() {
   const [status, setStatus] = useState('Initializing Zoho Widget...');
-  const [isClient, setIsClient] = useState(false);
   const [currentUser, setCurrentUser] = useState<ZohoUser | null>(null);
   const [loading, setLoading] = useState(false);
   const [sdkLoaded, setSdkLoaded] = useState(false);
+  const initAttempted = useRef(false);
+  const pageLoadHandled = useRef(false);
 
+  // Load Zoho SDK dynamically
   useEffect(() => {
-    setIsClient(true);
+    // Prevent double loading in development mode (React Strict Mode)
+    if (sdkLoaded) return;
+
+    const script = document.createElement('script');
+    script.src = 'https://live.zwidgets.com/js-sdk/1.4/ZohoEmbededAppSDK.min.js';
+    script.async = true;
+    
+    script.onload = () => {
+      console.log('✅ Zoho SDK script loaded');
+      setSdkLoaded(true);
+    };
+    
+    script.onerror = () => {
+      console.error('❌ Failed to load Zoho SDK script');
+      setStatus('Failed to load Zoho SDK. Make sure you have internet connection.');
+    };
+
+    document.body.appendChild(script);
+
+    return () => {
+      // Cleanup
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
   }, []);
 
   const getCurrentUser = async () => {
@@ -39,9 +64,7 @@ export default function ZohoWidget() {
       setStatus('Fetching current user...');
 
       if (!window.ZOHO?.CRM?.CONFIG) {
-        console.error('❌ Zoho CRM CONFIG not available');
-        setStatus('Zoho CRM API not ready');
-        return;
+        throw new Error('Zoho CRM CONFIG not available');
       }
 
       const response = await window.ZOHO.CRM.CONFIG.getCurrentUser();
@@ -50,169 +73,201 @@ export default function ZohoWidget() {
       if (response?.users && response.users.length > 0) {
         const user = response.users[0];
         setCurrentUser(user);
-        setStatus(`User loaded: ${user.full_name}`);
+        setStatus(`✅ User loaded: ${user.full_name}`);
         console.log('✅ User data:', user);
       } else {
-        setStatus('No user data found');
+        setStatus('❌ No user data found');
         console.error('❌ No user data in response:', response);
       }
     } catch (err) {
       console.error('❌ Error fetching current user:', err);
-      setStatus('Error fetching user data: ' + (err as Error).message);
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+      setStatus(`❌ Error: ${errorMsg}`);
     } finally {
       setLoading(false);
     }
   };
 
   const initZoho = () => {
+    // Prevent multiple initialization attempts
+    if (initAttempted.current) {
+      console.log('⚠️ Init already attempted, skipping...');
+      return;
+    }
+
     try {
-      if (typeof window === "undefined" || !window.ZOHO) {
-        console.error("❌ window.ZOHO is not available");
-        setStatus('Waiting for Zoho SDK...');
+      if (typeof window === 'undefined') {
+        console.error('❌ Running on server side');
         return;
       }
 
-      if (!window.ZOHO?.embeddedApp) {
+      if (!window.ZOHO) {
+        console.error('❌ window.ZOHO is not available');
+        setStatus('❌ Zoho SDK not loaded. Please refresh the page.');
+        return;
+      }
+
+      if (!window.ZOHO.embeddedApp) {
         console.error('❌ Zoho embeddedApp not available');
-        setStatus('Zoho SDK not detected. Please open this inside Zoho CRM.');
+        setStatus('❌ This widget must run inside Zoho CRM. Open it from within Zoho CRM.');
         return;
       }
 
-      console.log('✅ Zoho SDK detected');
-      console.log('Available methods:', Object.keys(window.ZOHO));
+      console.log('✅ Zoho SDK detected, initializing...');
+      initAttempted.current = true;
 
-      // METHOD 1: Traditional way - Register event BEFORE init
-      console.log('Method 1: Registering PageLoad with .on()...');
-      window.ZOHO.embeddedApp.on("PageLoad", function(data: any) {
-        console.log("🎉 PageLoad event triggered (Method 1)!", data);
-        setStatus('Zoho Widget loaded successfully!');
-        getCurrentUser();
-      });
-
-      console.log('Calling ZOHO.embeddedApp.init()...');
-      
-      // METHOD 2: Alternative - Pass events in init (try if Method 1 fails)
-      // Uncomment this and comment out Method 1 if needed
-      /*
-      window.ZOHO.embeddedApp.init({
-        events: {
-          PageLoad: function(data) {
-            console.log("🎉 PageLoad event triggered (Method 2)!", data);
-            setStatus('Zoho Widget loaded successfully!');
-            getCurrentUser();
-          }
+      // CRITICAL: Register PageLoad BEFORE calling init()
+      window.ZOHO.embeddedApp.on('PageLoad', function(data: any) {
+        if (pageLoadHandled.current) {
+          console.log('⚠️ PageLoad already handled, skipping...');
+          return;
         }
-      }).then(function() {
-        console.log("✅ SDK initialized with events");
-      }).catch(function(err) {
-        console.error("❌ Init failed:", err);
+
+        console.log('🎉 PageLoad event triggered!', data);
+        pageLoadHandled.current = true;
+        setStatus('✅ Widget loaded successfully! Entity: ' + (data?.Entity || 'Unknown'));
+        
+        // Automatically fetch user on PageLoad
+        setTimeout(() => {
+          getCurrentUser();
+        }, 500);
       });
-      */
-      
-      // For Method 1, just call init without parameters
+
+      // Initialize the SDK
       window.ZOHO.embeddedApp.init();
-      
-      console.log("✅ Init called - Waiting for PageLoad...");
-      setStatus('Widget initialized. Open a RECORD to trigger PageLoad.');
+      console.log('✅ Init called successfully');
+      setStatus('⏳ Widget initialized. Waiting for PageLoad event...');
 
     } catch (err) {
-      console.error('❌ Error:', err);
-      setStatus('Error: ' + (err as Error).message);
+      console.error('❌ Initialization error:', err);
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+      setStatus(`❌ Init failed: ${errorMsg}`);
+      initAttempted.current = false; // Allow retry on error
     }
   };
 
+  // Initialize Zoho when SDK is loaded
   useEffect(() => {
-    if (!isClient || !sdkLoaded) return;
+    if (!sdkLoaded) return;
 
-    console.log('=== Starting Zoho initialization ===');
+    // Small delay to ensure DOM is ready
     const timer = setTimeout(() => {
       initZoho();
-    }, 300);
+    }, 500);
 
     return () => clearTimeout(timer);
-  }, [isClient, sdkLoaded]);
-
-  if (!isClient) {
-    return null;
-  }
+  }, [sdkLoaded]);
 
   return (
-    <>
-      <Script
-        src="https://live.zwidgets.com/js-sdk/1.4/ZohoEmbededAppSDK.min.js"
-        strategy="afterInteractive"
-        onLoad={() => {
-          console.log("✅ Zoho script loaded!");
-          setSdkLoaded(true);
-        }}
-        onError={(e) => {
-          console.error("❌ Failed to load Zoho script:", e);
-          setStatus('Failed to load Zoho SDK script.');
-        }}
-      />
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">
+            Zoho CRM Widget (Next.js Fixed)
+          </h1>
 
-      <div style={{ padding: 20, fontFamily: 'sans-serif' }}>
-        <h1>Zoho CRM Widget</h1>
-        <p><strong>Status:</strong> {status}</p>
+          {/* Status Display */}
+          <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
+            <p className="text-sm font-semibold text-blue-700">Status</p>
+            <p className="text-gray-700 mt-1">{status}</p>
+          </div>
 
-        <div style={{
-          marginTop: '10px',
-          padding: '10px',
-          backgroundColor: '#fff3cd',
-          border: '1px solid #ffc107',
-          borderRadius: '4px',
-          fontSize: '14px'
-        }}>
-          <strong>⚠️ Important:</strong>
-          <ul style={{ marginTop: '5px', paddingLeft: '20px' }}>
-            <li>PageLoad only triggers on <strong>DETAIL PAGES</strong> (when you open a specific record)</li>
-            <li>Widget must be configured as <strong>Related List</strong> or <strong>Custom Button</strong></li>
-            <li>Does NOT work on List View or Web Tab widgets</li>
-            <li>Go to: Module → Open a Record → Scroll to see your widget</li>
-          </ul>
-        </div>
+          {/* Important Notes */}
+          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <h3 className="font-bold text-yellow-800 mb-2">⚠️ Important Requirements:</h3>
+            <ul className="list-disc list-inside text-sm text-yellow-700 space-y-1">
+              <li><strong>Widget Location:</strong> This must be configured as a <strong>Related List</strong>, <strong>Custom Button</strong>, or <strong>Web Tab</strong> in Zoho CRM</li>
+              <li><strong>PageLoad Trigger:</strong> Only fires on <strong>Detail Pages</strong> (when viewing a specific record)</li>
+              <li><strong>NOT for List View:</strong> Does not work on module list views</li>
+              <li><strong>Access Method:</strong> Navigate to: Module → Open Record → Your widget appears</li>
+              <li><strong>Hosting:</strong> Must be hosted externally and registered in Zoho Developer Console</li>
+            </ul>
+          </div>
 
-        <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
-          <p>SDK Loaded: {sdkLoaded ? '✅ Yes' : '❌ No'}</p>
-        </div>
+          {/* SDK Status */}
+          <div className="mb-6 flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+            <div>
+              <span className="text-sm font-semibold text-gray-700">SDK Loaded:</span>
+              <span className={`ml-2 ${sdkLoaded ? 'text-green-600' : 'text-red-600'}`}>
+                {sdkLoaded ? '✅ Yes' : '❌ No'}
+              </span>
+            </div>
+            <div>
+              <span className="text-sm font-semibold text-gray-700">Init Attempted:</span>
+              <span className={`ml-2 ${initAttempted.current ? 'text-green-600' : 'text-gray-600'}`}>
+                {initAttempted.current ? '✅ Yes' : '⏳ No'}
+              </span>
+            </div>
+          </div>
 
-        <button 
-          onClick={getCurrentUser}
-          disabled={loading}
-          style={{
-            padding: '10px 20px',
-            marginTop: '10px',
-            backgroundColor: loading ? '#ccc' : '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: loading ? 'not-allowed' : 'pointer'
-          }}
-        >
-          {loading ? 'Loading...' : 'Manually Fetch Current User'}
-        </button>
-
-        {currentUser && (
-          <div style={{
-            marginTop: '20px',
-            padding: '15px',
-            backgroundColor: '#f5f5f5',
-            borderRadius: '4px',
-            border: '1px solid #ddd'
-          }}>
-            <h3>Current User Information</h3>
-            <p><strong>Name:</strong> {currentUser.full_name}</p>
-            <p><strong>Email:</strong> {currentUser.email}</p>
-            <p><strong>ID:</strong> {currentUser.id}</p>
-            {currentUser.role && (
-              <p><strong>Role:</strong> {currentUser.role.name}</p>
-            )}
-            {currentUser.profile && (
-              <p><strong>Profile:</strong> {currentUser.profile.name}</p>
+          {/* Manual Fetch Button */}
+          <div className="mb-6">
+            <button
+              onClick={getCurrentUser}
+              disabled={loading || !sdkLoaded}
+              className={`px-6 py-3 rounded-lg font-semibold text-white transition-colors ${
+                loading || !sdkLoaded
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800'
+              }`}
+            >
+              {loading ? '⏳ Loading...' : '🔄 Manually Fetch Current User'}
+            </button>
+            {!sdkLoaded && (
+              <p className="text-sm text-gray-500 mt-2">
+                Button will be enabled once SDK loads
+              </p>
             )}
           </div>
-        )}
+
+          {/* User Information Display */}
+          {currentUser && (
+            <div className="p-6 bg-gradient-to-br from-green-50 to-blue-50 border border-green-200 rounded-lg">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">
+                👤 Current User Information
+              </h3>
+              <div className="space-y-2">
+                <div className="flex">
+                  <span className="font-semibold text-gray-700 w-32">Name:</span>
+                  <span className="text-gray-900">{currentUser.full_name}</span>
+                </div>
+                <div className="flex">
+                  <span className="font-semibold text-gray-700 w-32">Email:</span>
+                  <span className="text-gray-900">{currentUser.email}</span>
+                </div>
+                <div className="flex">
+                  <span className="font-semibold text-gray-700 w-32">User ID:</span>
+                  <span className="text-gray-900 font-mono text-sm">{currentUser.id}</span>
+                </div>
+                {currentUser.role && (
+                  <div className="flex">
+                    <span className="font-semibold text-gray-700 w-32">Role:</span>
+                    <span className="text-gray-900">{currentUser.role.name}</span>
+                  </div>
+                )}
+                {currentUser.profile && (
+                  <div className="flex">
+                    <span className="font-semibold text-gray-700 w-32">Profile:</span>
+                    <span className="text-gray-900">{currentUser.profile.name}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Troubleshooting */}
+          <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+            <h3 className="font-bold text-gray-800 mb-2">🔧 Troubleshooting:</h3>
+            <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+              <li>If PageLoad doesn't trigger, make sure you're on a <strong>Detail Page</strong> (not List View)</li>
+              <li>If you see "Parentwindow reference not found", the widget is not loaded inside Zoho CRM</li>
+              <li>This widget MUST be accessed through Zoho CRM's interface, not directly in a browser</li>
+              <li>Clear your browser cache and refresh if you see unexpected errors</li>
+              <li>Check the browser console (F12) for detailed error messages</li>
+            </ul>
+          </div>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
