@@ -14,335 +14,464 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f7fa;
+            background: #f8f9fa;
             padding: 20px;
         }
         
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            padding: 30px;
         }
         
         h1 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-            font-size: 24px;
+            color: #1a73e8;
+            margin-bottom: 8px;
+            font-size: 28px;
         }
         
-        .status {
-            background: #e3f2fd;
-            border-left: 4px solid #2196F3;
-            padding: 12px 16px;
-            margin-bottom: 20px;
-            border-radius: 4px;
+        .subtitle {
+            color: #5f6368;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+        
+        .status-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin-bottom: 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
         
         .status-label {
             font-weight: 600;
-            color: #1976d2;
-            font-size: 14px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.9;
+            margin-bottom: 8px;
         }
         
         .status-text {
-            color: #555;
-            margin-top: 4px;
+            font-size: 16px;
+            font-weight: 500;
         }
         
         .warning {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            padding: 16px;
-            border-radius: 4px;
-            margin-bottom: 20px;
+            background: #fff8e1;
+            border-left: 4px solid #ffa726;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 24px;
         }
         
         .warning h3 {
-            color: #856404;
+            color: #e65100;
             font-size: 16px;
             margin-bottom: 12px;
-        }
-        
-        .warning ul {
-            margin-left: 20px;
-            color: #856404;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-        
-        .warning li {
-            margin-bottom: 6px;
-        }
-        
-        .button {
-            background: #2196F3;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: background 0.2s;
-        }
-        
-        .button:hover {
-            background: #1976d2;
-        }
-        
-        .button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        
-        .user-info {
-            margin-top: 24px;
-            padding: 20px;
-            background: linear-gradient(135deg, #e8f5e9 0%, #e3f2fd 100%);
-            border: 1px solid #81c784;
-            border-radius: 8px;
-            display: none;
-        }
-        
-        .user-info.show {
-            display: block;
-        }
-        
-        .user-info h3 {
-            color: #2c3e50;
-            margin-bottom: 16px;
-            font-size: 18px;
-        }
-        
-        .user-field {
-            display: flex;
-            margin-bottom: 12px;
-            font-size: 14px;
-        }
-        
-        .user-label {
-            font-weight: 600;
-            color: #555;
-            width: 120px;
-        }
-        
-        .user-value {
-            color: #2c3e50;
-        }
-        
-        .sdk-status {
-            display: flex;
-            gap: 24px;
-            padding: 12px;
-            background: #f5f5f5;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-        
-        .sdk-status-item {
             display: flex;
             align-items: center;
             gap: 8px;
         }
         
-        .loading {
-            display: inline-block;
-            width: 14px;
-            height: 14px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #2196F3;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        .warning ul {
+            margin-left: 20px;
+            color: #f57c00;
+            font-size: 14px;
+            line-height: 1.8;
         }
         
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .warning li {
+            margin-bottom: 8px;
+        }
+        
+        .warning strong {
+            color: #e65100;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .info-card {
+            background: #f1f3f4;
+            padding: 16px;
+            border-radius: 8px;
+            border: 2px solid #e8eaed;
+        }
+        
+        .info-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #5f6368;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        
+        .info-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #202124;
+        }
+        
+        .info-value.success {
+            color: #0f9d58;
+        }
+        
+        .info-value.error {
+            color: #d93025;
+        }
+        
+        .info-value.pending {
+            color: #f9ab00;
+        }
+        
+        .button {
+            background: linear-gradient(135deg, #1a73e8 0%, #4285f4 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
+        }
+        
+        .button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
+        .button:disabled {
+            background: #dadce0;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        .user-card {
+            margin-top: 24px;
+            padding: 24px;
+            background: linear-gradient(135deg, #e8f5e9 0%, #e1f5fe 100%);
+            border: 2px solid #81c784;
+            border-radius: 12px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .user-card.show {
+            display: block;
+        }
+        
+        .user-card h3 {
+            color: #1b5e20;
+            margin-bottom: 20px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .user-field {
+            display: flex;
+            margin-bottom: 14px;
+            font-size: 15px;
+            padding: 8px 0;
+            border-bottom: 1px solid #c8e6c9;
+        }
+        
+        .user-field:last-child {
+            border-bottom: none;
+        }
+        
+        .user-label {
+            font-weight: 600;
+            color: #2e7d32;
+            width: 140px;
+            flex-shrink: 0;
+        }
+        
+        .user-value {
+            color: #1b5e20;
+            word-break: break-word;
+        }
+        
+        .console-box {
+            margin-top: 24px;
+            padding: 16px;
+            background: #263238;
+            color: #4db6ac;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 2px solid #37474f;
+        }
+        
+        .console-line {
+            margin-bottom: 4px;
+            line-height: 1.5;
+        }
+        
+        .console-success {
+            color: #66bb6a;
+        }
+        
+        .console-error {
+            color: #ef5350;
+        }
+        
+        .console-info {
+            color: #64b5f6;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔧 Zoho CRM Widget (Plain HTML)</h1>
+        <h1>🔧 Zoho CRM Widget</h1>
+        <p class="subtitle">Plain HTML Implementation - v1.4 SDK</p>
         
-        <div class="status">
-            <div class="status-label">Status</div>
-            <div class="status-text" id="status">Initializing...</div>
+        <div class="status-box">
+            <div class="status-label">Current Status</div>
+            <div class="status-text" id="status">Initializing Zoho SDK...</div>
         </div>
         
         <div class="warning">
-            <h3>⚠️ Important Requirements:</h3>
+            <h3>⚠️ Critical Requirements</h3>
             <ul>
-                <li><strong>Widget Location:</strong> Must be configured as <strong>Related List</strong>, <strong>Custom Button</strong>, or <strong>Web Tab</strong></li>
-                <li><strong>PageLoad Trigger:</strong> Only fires on <strong>Detail Pages</strong> (when viewing a record)</li>
-                <li><strong>NOT for List View:</strong> Does not work on module list views</li>
-                <li><strong>Access:</strong> Module → Open Record → Your widget appears</li>
-                <li><strong>Testing:</strong> Must be accessed through Zoho CRM, not directly in browser</li>
+                <li><strong>Widget Type:</strong> Must be <strong>Related List</strong>, <strong>Custom Button</strong>, or <strong>Web Tab</strong></li>
+                <li><strong>PageLoad Event:</strong> Only triggers on <strong>Detail Pages</strong> (when viewing a specific record)</li>
+                <li><strong>Testing Location:</strong> Go to: Module → Open a Record → Your widget appears</li>
+                <li><strong>IMPORTANT:</strong> This will NOT work if opened directly in browser - must be inside Zoho CRM iframe</li>
+                <li><strong>Parent Window:</strong> If you see "parentwindow reference not found", you're not inside Zoho CRM</li>
             </ul>
         </div>
         
-        <div class="sdk-status">
-            <div class="sdk-status-item">
-                <strong>SDK Loaded:</strong>
-                <span id="sdk-status">⏳ Loading...</span>
+        <div class="info-grid">
+            <div class="info-card">
+                <div class="info-label">SDK Status</div>
+                <div class="info-value pending" id="sdk-status">Loading...</div>
             </div>
-            <div class="sdk-status-item">
-                <strong>Initialized:</strong>
-                <span id="init-status">❌ No</span>
+            <div class="info-card">
+                <div class="info-label">Initialized</div>
+                <div class="info-value error" id="init-status">Not Yet</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">PageLoad Event</div>
+                <div class="info-value error" id="pageload-status">Waiting...</div>
             </div>
         </div>
         
         <button class="button" id="fetchBtn" onclick="manualFetchUser()" disabled>
-            🔄 Manually Fetch Current User
+            <span>🔄</span>
+            <span>Manually Fetch Current User</span>
         </button>
         
-        <div class="user-info" id="userInfo">
-            <h3>👤 Current User Information</h3>
+        <div class="user-card" id="userInfo">
+            <h3>
+                <span>👤</span>
+                <span>Current User Information</span>
+            </h3>
             <div id="userData"></div>
+        </div>
+        
+        <div class="console-box" id="console">
+            <div class="console-line console-info">📋 Console Log:</div>
         </div>
     </div>
 
     <script>
-        let sdkLoaded = false;
-        let initialized = false;
-
-        // Update status message
-        function setStatus(message) {
-            document.getElementById('status').textContent = message;
-            console.log('Status:', message);
+        // Console logger
+        function log(message, type = 'info') {
+            const consoleBox = document.getElementById('console');
+            const line = document.createElement('div');
+            line.className = `console-line console-${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            line.textContent = `[${timestamp}] ${message}`;
+            consoleBox.appendChild(line);
+            consoleBox.scrollTop = consoleBox.scrollHeight;
+            console.log(message);
         }
 
-        // Check if SDK is loaded
-        function checkSDK() {
-            if (typeof ZOHO !== 'undefined' && ZOHO.embeddedApp) {
-                sdkLoaded = true;
-                document.getElementById('sdk-status').textContent = '✅ Yes';
-                document.getElementById('fetchBtn').disabled = false;
-                setStatus('✅ SDK loaded successfully');
-                initializeWidget();
-            } else {
-                setTimeout(checkSDK, 100);
-            }
+        // Update status
+        function setStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            log(message, type);
         }
 
         // Fetch current user
         async function fetchCurrentUser() {
             try {
-                setStatus('⏳ Fetching current user...');
+                setStatus('⏳ Fetching current user data...', 'info');
                 
-                if (!ZOHO || !ZOHO.CRM || !ZOHO.CRM.CONFIG) {
-                    throw new Error('Zoho CRM CONFIG not available');
+                if (!window.ZOHO || !window.ZOHO.CRM || !window.ZOHO.CRM.CONFIG) {
+                    throw new Error('Zoho CRM CONFIG not available. Make sure widget is inside Zoho CRM.');
                 }
 
+                log('Calling ZOHO.CRM.CONFIG.getCurrentUser()...', 'info');
                 const response = await ZOHO.CRM.CONFIG.getCurrentUser();
-                console.log('✅ User response:', response);
+                
+                log('Response received: ' + JSON.stringify(response), 'success');
 
                 if (response && response.users && response.users.length > 0) {
                     const user = response.users[0];
                     displayUserInfo(user);
-                    setStatus('✅ User loaded: ' + user.full_name);
+                    setStatus('✅ User loaded: ' + user.full_name, 'success');
                 } else {
-                    throw new Error('No user data found');
+                    throw new Error('No user data found in response');
                 }
             } catch (error) {
-                console.error('❌ Error:', error);
-                setStatus('❌ Error: ' + error.message);
+                log('❌ Error: ' + error.message, 'error');
+                setStatus('❌ Error: ' + error.message, 'error');
+                alert('Error fetching user: ' + error.message);
             }
         }
 
         // Display user information
         function displayUserInfo(user) {
             const userDataDiv = document.getElementById('userData');
-            let html = `
-                <div class="user-field">
-                    <span class="user-label">Name:</span>
-                    <span class="user-value">${user.full_name || 'N/A'}</span>
-                </div>
-                <div class="user-field">
-                    <span class="user-label">Email:</span>
-                    <span class="user-value">${user.email || 'N/A'}</span>
-                </div>
-                <div class="user-field">
-                    <span class="user-label">User ID:</span>
-                    <span class="user-value">${user.id || 'N/A'}</span>
-                </div>
-            `;
+            let html = '';
 
-            if (user.role) {
-                html += `
-                    <div class="user-field">
-                        <span class="user-label">Role:</span>
-                        <span class="user-value">${user.role.name}</span>
-                    </div>
-                `;
-            }
+            const fields = [
+                { label: 'Full Name', value: user.full_name },
+                { label: 'Email', value: user.email },
+                { label: 'User ID', value: user.id },
+                { label: 'Role', value: user.role ? user.role.name : 'N/A' },
+                { label: 'Profile', value: user.profile ? user.profile.name : 'N/A' }
+            ];
 
-            if (user.profile) {
-                html += `
-                    <div class="user-field">
-                        <span class="user-label">Profile:</span>
-                        <span class="user-value">${user.profile.name}</span>
-                    </div>
-                `;
-            }
+            fields.forEach(field => {
+                if (field.value && field.value !== 'N/A') {
+                    html += `
+                        <div class="user-field">
+                            <span class="user-label">${field.label}:</span>
+                            <span class="user-value">${field.value}</span>
+                        </div>
+                    `;
+                }
+            });
 
             userDataDiv.innerHTML = html;
             document.getElementById('userInfo').classList.add('show');
+            log('User info displayed successfully', 'success');
         }
 
         // Manual fetch handler
         function manualFetchUser() {
+            log('Manual fetch triggered by button click', 'info');
             fetchCurrentUser();
         }
 
-        // Initialize Zoho widget
-        function initializeWidget() {
+        // Initialize Zoho widget - Following official pattern
+        function initializeZoho() {
             try {
-                if (!ZOHO || !ZOHO.embeddedApp) {
-                    setStatus('❌ This must run inside Zoho CRM');
+                log('=== Starting Zoho Widget Initialization ===', 'info');
+                
+                // Check if ZOHO object exists
+                if (typeof ZOHO === 'undefined') {
+                    log('❌ ZOHO object not found - SDK not loaded', 'error');
+                    setStatus('❌ Zoho SDK not loaded', 'error');
+                    document.getElementById('sdk-status').textContent = 'Failed';
+                    document.getElementById('sdk-status').className = 'info-value error';
                     return;
                 }
-
-                console.log('🚀 Initializing Zoho Widget...');
-
-                // Register PageLoad event BEFORE init
+                
+                log('✅ ZOHO object found', 'success');
+                document.getElementById('sdk-status').textContent = 'Loaded';
+                document.getElementById('sdk-status').className = 'info-value success';
+                
+                // Check embeddedApp
+                if (!ZOHO.embeddedApp) {
+                    log('❌ ZOHO.embeddedApp not available', 'error');
+                    setStatus('❌ Widget must run inside Zoho CRM iframe', 'error');
+                    return;
+                }
+                
+                log('✅ ZOHO.embeddedApp available', 'success');
+                
+                // Register PageLoad event BEFORE init() - This is critical!
+                log('Registering PageLoad event listener...', 'info');
                 ZOHO.embeddedApp.on("PageLoad", function(data) {
-                    console.log('🎉 PageLoad triggered!', data);
-                    document.getElementById('init-status').textContent = '✅ Yes';
-                    initialized = true;
+                    log('🎉 PageLoad event triggered!', 'success');
+                    log('PageLoad data: ' + JSON.stringify(data), 'info');
+                    
+                    document.getElementById('pageload-status').textContent = 'Triggered';
+                    document.getElementById('pageload-status').className = 'info-value success';
                     
                     const entity = data && data.Entity ? data.Entity : 'Unknown';
-                    setStatus('✅ Widget loaded! Entity: ' + entity);
+                    setStatus('✅ Widget loaded! Entity: ' + entity, 'success');
                     
-                    // Auto-fetch user on PageLoad
-                    setTimeout(() => {
+                    // Auto-fetch user after PageLoad
+                    log('Auto-fetching current user...', 'info');
+                    setTimeout(function() {
                         fetchCurrentUser();
                     }, 500);
                 });
-
-                // Initialize SDK
+                
+                log('PageLoad event registered successfully', 'success');
+                
+                // Initialize the SDK
+                log('Calling ZOHO.embeddedApp.init()...', 'info');
                 ZOHO.embeddedApp.init();
-                console.log('✅ Init called');
-                setStatus('⏳ Initialized. Waiting for PageLoad...');
-
+                
+                log('✅ Init called successfully', 'success');
+                document.getElementById('init-status').textContent = 'Yes';
+                document.getElementById('init-status').className = 'info-value success';
+                document.getElementById('fetchBtn').disabled = false;
+                
+                setStatus('⏳ Widget initialized. Open a RECORD to trigger PageLoad.', 'info');
+                
             } catch (error) {
-                console.error('❌ Init error:', error);
-                setStatus('❌ Initialization failed: ' + error.message);
+                log('❌ Initialization error: ' + error.message, 'error');
+                setStatus('❌ Init failed: ' + error.message, 'error');
             }
         }
 
-        // Start checking for SDK
+        // Start initialization when page loads
         window.addEventListener('load', function() {
-            console.log('🔍 Checking for Zoho SDK...');
-            checkSDK();
+            log('Window loaded, starting initialization...', 'info');
+            // Small delay to ensure SDK is ready
+            setTimeout(function() {
+                initializeZoho();
+            }, 300);
         });
 
-        // Immediate check as well
-        checkSDK();
+        // Also try immediate initialization
+        if (document.readyState === 'complete') {
+            setTimeout(function() {
+                initializeZoho();
+            }, 300);
+        }
     </script>
 </body>
 </html>
