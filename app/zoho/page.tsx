@@ -1,71 +1,67 @@
 "use client";
-
 import { useEffect } from "react";
 
 declare global {
   interface Window {
     ZOHO: any;
-    ZDK: any;
   }
 }
 
 export default function Home() {
   useEffect(() => {
-    // Load Zoho SDK dynamically (v1.4)
+    // ✅ Safety check — if window or document not available, exit early
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      console.warn("Window or document not available (likely server-side).");
+      return;
+    }
+
+    // ✅ Load Zoho SDK dynamically
     const script = document.createElement("script");
     script.src = "https://live.zwidgets.com/js-sdk/1.4/ZohoEmbededAppSDK.min.js";
     script.async = true;
-    script.onload = () => initializeZoho();
+    script.onload = () => waitForZoho();
     document.body.appendChild(script);
 
-    function initializeZoho() {
-      if (!window.ZOHO) {
-        console.error("ZOHO SDK not loaded.");
+    function waitForZoho() {
+      const interval = setInterval(() => {
+        // ✅ Check if ZOHO SDK is available
+        if (window.ZOHO && window.ZOHO.embeddedApp) {
+          clearInterval(interval);
+          initZoho();
+        }
+      }, 300);
+    }
+
+    function initZoho() {
+      if (!window.ZOHO || !window.ZOHO.embeddedApp) {
+        console.error("❌ ZOHO SDK not found. Make sure widget is loaded inside Zoho CRM.");
         return;
       }
 
-      // Register all event listeners before initialization
-      window.ZOHO.embeddedApp.on("PageLoad", function (data: any) {
-        console.log("📄 Page loaded:", data);
+      // ✅ Register SDK listeners
+      window.ZOHO.embeddedApp.on("PageLoad", (data: any) => {
+        console.log("📄 Page Loaded:", data);
       });
 
-      window.ZOHO.embeddedApp.on("DialerActive", function () {
-        console.log("📞 Dialer Activated");
+      window.ZOHO.embeddedApp.on("Dial", (data: any) => {
+        console.log("☎️ Dial Event:", data);
       });
 
-      window.ZOHO.embeddedApp.on("Dial", function (data: any) {
-        console.log("📲 Number Dialed:", data);
+      window.ZOHO.embeddedApp.on("ContextUpdate", (data: any) => {
+        console.log("🧩 Context Update:", data);
       });
 
-      window.ZOHO.embeddedApp.on("Notify", function (data: any) {
-        console.log("🔔 Client Script Notification:", data);
+      // ✅ Initialize Zoho SDK
+      window.ZOHO.embeddedApp.init().then(() => {
+        console.log("✅ Zoho SDK Initialized Successfully");
       });
-
-      window.ZOHO.embeddedApp.on("NotifyAndWait", function (data: any) {
-        console.log("⏳ NotifyAndWait Event:", data);
-
-        // Example of sending a response
-        if (window.ZDK && window.ZDK.Client) {
-          window.ZDK.Client.sendResponse(data.id, {
-            choice: "mail",
-            value: "example@zoho.com",
-          });
-        }
-      });
-
-      window.ZOHO.embeddedApp.on("ContextUpdate", function (data: any) {
-        console.log("🧩 Context Updated:", data);
-      });
-
-      // Initialize Zoho embedded app
-      window.ZOHO.embeddedApp.init();
     }
   }, []);
 
-  // Example: Fetch a record (same pattern works for create/update)
+  // ✅ Fetch a Lead record example
   const getLead = async () => {
-    if (!window.ZOHO || !window.ZOHO.CRM) {
-      console.error("ZOHO SDK not ready yet!");
+    if (!window.ZOHO?.CRM?.API) {
+      console.warn("⚠️ Zoho SDK not ready yet — wait for initialization.");
       return;
     }
 
@@ -81,7 +77,7 @@ export default function Home() {
   };
 
   return (
-    <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
+    <div style={{ padding: "2rem" }}>
       <h1>Zoho CRM Widget (Next.js + SDK v1.4)</h1>
       <button
         onClick={getLead}
@@ -94,7 +90,7 @@ export default function Home() {
           marginTop: "1rem",
         }}
       >
-        Fetch Lead Record
+        Fetch Lead
       </button>
     </div>
   );
