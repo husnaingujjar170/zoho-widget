@@ -13,7 +13,7 @@ export default function Home() {
     // Load Zoho SDK script dynamically (if not already loaded)
     if (!window.ZOHO) {
       const script = document.createElement("script");
-      script.src = "https://live.zwidgets.com/js-sdk/1.2/ZohoEmbededAppSDK.min.js";
+      script.src = "https://live.zwidgets.com/js-sdk/1.4/ZohoEmbededAppSDK.min.js";
       script.async = true;
       script.onload = () => {
         initializeZoho();
