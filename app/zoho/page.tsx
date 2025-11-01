@@ -27,7 +27,7 @@ export default function ZohoWidget() {
   const [isClient, setIsClient] = useState(false);
   const [currentUser, setCurrentUser] = useState<ZohoUser | null>(null);
   const [loading, setLoading] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [sdkLoaded, setSdkLoaded] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -64,7 +64,7 @@ export default function ZohoWidget() {
     }
   };
 
-  const initZoho = async () => {
+  const initZoho = () => {
     try {
       if (typeof window === "undefined" || !window.ZOHO) {
         console.error("❌ window.ZOHO is not available");
@@ -72,55 +72,50 @@ export default function ZohoWidget() {
         return;
       }
 
-      if (isInitialized) {
-        console.log('⚠️ Already initialized, skipping...');
-        return;
-      }
-
-      console.log("Available Zoho SDK:", window.ZOHO);
-      
       if (!window.ZOHO?.embeddedApp) {
         console.error('❌ Zoho embeddedApp not available');
         setStatus('Zoho SDK not detected. Please open this inside Zoho CRM.');
         return;
       }
 
-      console.log('✅ Zoho SDK detected. Initializing...');
+      console.log('✅ Zoho SDK detected');
+      console.log('Available Zoho SDK methods:', Object.keys(window.ZOHO));
 
-      // CRITICAL FIX: Pass events as parameter in init() for Next.js compatibility
-      await window.ZOHO.embeddedApp.init({
-        events: {
-          PageLoad: function(data: any) {
-            console.log("✅ PageLoad event triggered!", data);
-            setStatus('Zoho Widget loaded successfully!');
-            
-            // Automatically fetch user on page load
-            getCurrentUser();
-          }
-        }
+      // CRITICAL: Register event listener BEFORE calling init()
+      console.log('Registering PageLoad event listener...');
+      window.ZOHO.embeddedApp.on("PageLoad", function(data: any) {
+        console.log("✅ PageLoad event triggered!", data);
+        setStatus('Zoho Widget loaded successfully!');
+        
+        // Automatically fetch user on page load
+        getCurrentUser();
       });
 
-      setIsInitialized(true);
-      console.log("✅ Zoho SDK initialized successfully");
+      // Now initialize the SDK (don't await, just call it)
+      console.log('Calling ZOHO.embeddedApp.init()...');
+      window.ZOHO.embeddedApp.init();
+      console.log("✅ Zoho SDK init() called successfully");
+      
+      setStatus('Waiting for PageLoad event...');
 
     } catch (err) {
       console.error('❌ Error initializing Zoho SDK:', err);
-      setStatus('Error initializing Zoho SDK: ' + (err as Error).message);
+      setStatus('Error: ' + (err as Error).message);
     }
   };
 
+  // Initialize Zoho when SDK is loaded
   useEffect(() => {
-    if (!isClient) return;
+    if (!isClient || !sdkLoaded) return;
 
-    // Multiple retry attempts with increasing delays
-    const timers: NodeJS.Timeout[] = [];
-    
-    timers.push(setTimeout(() => initZoho(), 1000));
-    timers.push(setTimeout(() => initZoho(), 2000));
-    timers.push(setTimeout(() => initZoho(), 3000));
+    console.log('SDK loaded, initializing Zoho...');
+    // Small delay to ensure SDK is fully ready
+    const timer = setTimeout(() => {
+      initZoho();
+    }, 100);
 
-    return () => timers.forEach(timer => clearTimeout(timer));
-  }, [isClient]);
+    return () => clearTimeout(timer);
+  }, [isClient, sdkLoaded]);
 
   if (!isClient) {
     return null;
@@ -133,7 +128,7 @@ export default function ZohoWidget() {
         strategy="afterInteractive"
         onLoad={() => {
           console.log("✅ Zoho script loaded!");
-          setTimeout(() => initZoho(), 500);
+          setSdkLoaded(true);
         }}
         onError={(e) => {
           console.error("❌ Failed to load Zoho script:", e);
@@ -145,17 +140,22 @@ export default function ZohoWidget() {
         <h1>Zoho CRM Widget</h1>
         <p><strong>Status:</strong> {status}</p>
 
+        <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
+          <p>SDK Loaded: {sdkLoaded ? '✅ Yes' : '❌ No'}</p>
+          <p>Check console for detailed logs</p>
+        </div>
+
         <button 
           onClick={getCurrentUser}
-          disabled={loading || !isInitialized}
+          disabled={loading}
           style={{
             padding: '10px 20px',
             marginTop: '10px',
-            backgroundColor: loading || !isInitialized ? '#ccc' : '#007bff',
+            backgroundColor: loading ? '#ccc' : '#007bff',
             color: 'white',
             border: 'none',
             borderRadius: '4px',
-            cursor: loading || !isInitialized ? 'not-allowed' : 'pointer'
+            cursor: loading ? 'not-allowed' : 'pointer'
           }}
         >
           {loading ? 'Loading...' : 'Fetch Current User'}
