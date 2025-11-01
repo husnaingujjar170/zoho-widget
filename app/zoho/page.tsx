@@ -9,22 +9,7 @@ declare global {
 
 export default function Home() {
   useEffect(() => {
-     window.onerror = function (
-    message: string | Event,
-    source?: string,
-    lineno?: number,
-    colno?: number,
-    error?: Error
-  ): boolean | void {
-    const msg = typeof message === "string" ? message : "";
-    const src = source ?? "";
-
-    if (msg.includes("is not valid JSON") && src.includes("wmsconnector.html")) {
-      // 🔇 Suppress Zoho SDK internal JSON parse warnings
-      return true;
-    }
-    return false;
-  };
+    
     // ✅ Safety check — if window or document not available, exit early
     if (typeof window === "undefined" || typeof document === "undefined") {
       console.warn("Window or document not available (likely server-side).");
