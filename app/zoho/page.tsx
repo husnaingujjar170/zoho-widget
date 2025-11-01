@@ -1,5 +1,6 @@
-"use client";
-import { useEffect } from "react";
+'use client';
+import { useEffect, useState } from 'react';
+import Script from 'next/script';
 
 declare global {
   interface Window {
@@ -7,92 +8,56 @@ declare global {
   }
 }
 
-export default function Home() {
-  useEffect(() => {
-    
-    // ✅ Safety check — if window or document not available, exit early
-    if (typeof window === "undefined" || typeof document === "undefined") {
-      console.warn("Window or document not available (likely server-side).");
-      return;
-    }
+export default function ZohoWidget() {
+  const [status, setStatus] = useState('Initializing Zoho Widget...');
 
-    // ✅ Load Zoho SDK dynamically
-    const script = document.createElement("script");
-    script.src = "https://live.zwidgets.com/js-sdk/1.4/ZohoEmbededAppSDK.min.js";
-    script.async = true;
-    script.onload = () => waitForZoho();
-    document.body.appendChild(script);
-
-    function waitForZoho() {
-      const interval = setInterval(() => {
-        // ✅ Check if ZOHO SDK is available
-        if (window.ZOHO && window.ZOHO.embeddedApp) {
-          clearInterval(interval);
-          initZoho();
-        }
-      }, 300);
-    }
-
-    function initZoho() {
-      if (!window.ZOHO || !window.ZOHO.embeddedApp) {
-        console.error("❌ ZOHO SDK not found. Make sure widget is loaded inside Zoho CRM.");
+  const initZoho = async () => {
+    try {
+      if (typeof window === "undefined" || !window.ZOHO) {
+        console.error("❌ window.ZOHO is not available");
+        console.error("This page must be loaded within Zoho CRM as a widget");
+        return;
+      }
+        console.log("Available Zoho SDK methods:", window.ZOHO);
+      if (!window.ZOHO?.embeddedApp) {
+        console.error('❌ Zoho SDK not available');
+        setStatus('Zoho SDK not detected. Please open this inside Zoho CRM.');
         return;
       }
 
-      // ✅ Register SDK listeners
-      window.ZOHO.embeddedApp.on("PageLoad", (data: any) => {
-        console.log("📄 Page Loaded:", data);
+      console.log('✅ Zoho SDK detected. Initializing...');
+
+      window.ZOHO.embeddedApp.on('PageLoad', async (data: any) => {
+        console.log("block started");
       });
 
-      window.ZOHO.embeddedApp.on("Dial", (data: any) => {
-        console.log("☎️ Dial Event:", data);
-      });
-
-      window.ZOHO.embeddedApp.on("ContextUpdate", (data: any) => {
-        console.log("🧩 Context Update:", data);
-      });
-
-      // ✅ Initialize Zoho SDK
-      window.ZOHO.embeddedApp.init().then(() => {
-        console.log("✅ Zoho SDK Initialized Successfully");
-      });
-    }
-  }, []);
-
-  // ✅ Fetch a Lead record example
-  const getLead = async () => {
-    if (!window.ZOHO?.CRM?.API) {
-      console.warn("⚠️ Zoho SDK not ready yet — wait for initialization.");
-      return;
-    }
-
-    try {
-      const res = await window.ZOHO.CRM.API.getRecord({
-        Entity: "Leads",
-        RecordID: "123456789",
-      });
-      console.log("✅ Lead Data:", res);
+      window.ZOHO.embeddedApp.init();
     } catch (err) {
-      console.error("❌ Error fetching lead:", err);
+      console.error('❌ Error initializing Zoho SDK:', err);
+      setStatus('Error initializing Zoho SDK.');
     }
+        console.log("block started part");
+
+
   };
 
+  useEffect(() => {
+    const timer = setTimeout(() => initZoho(), 10000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <div style={{ padding: "2rem" }}>
-      <h1>Zoho CRM Widget (Next.js + SDK v1.4)</h1>
-      <button
-        onClick={getLead}
-        style={{
-          padding: "10px 20px",
-          borderRadius: "8px",
-          border: "1px solid #ccc",
-          background: "#f7f7f7",
-          cursor: "pointer",
-          marginTop: "1rem",
-        }}
-      >
-        Fetch Lead
-      </button>
-    </div>
+    <>
+      <Script
+        src="https://live.zwidgets.com/js-sdk/1.4/ZohoEmbededAppSDK.min.js"
+        strategy="afterInteractive"
+        onLoad={()=> console.log("script loaded!")}
+      />
+
+      <div style={{ padding: 20, fontFamily: 'sans-serif' }}>
+        <h1>Zoho CRM Widget</h1>
+        <p>{status}</p>
+      </div>
+    </>
   );
 }
