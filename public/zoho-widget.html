@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zoho CRM Widget</title>
+    <script src="https://live.zwidgets.com/js-sdk/1.4/ZohoEmbededAppSDK.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 24px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        .status {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        
+        .status-label {
+            font-weight: 600;
+            color: #1976d2;
+            font-size: 14px;
+        }
+        
+        .status-text {
+            color: #555;
+            margin-top: 4px;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 16px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .warning h3 {
+            color: #856404;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .warning ul {
+            margin-left: 20px;
+            color: #856404;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .warning li {
+            margin-bottom: 6px;
+        }
+        
+        .button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        
+        .button:hover {
+            background: #1976d2;
+        }
+        
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .user-info {
+            margin-top: 24px;
+            padding: 20px;
+            background: linear-gradient(135deg, #e8f5e9 0%, #e3f2fd 100%);
+            border: 1px solid #81c784;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .user-info.show {
+            display: block;
+        }
+        
+        .user-info h3 {
+            color: #2c3e50;
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+        
+        .user-field {
+            display: flex;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        
+        .user-label {
+            font-weight: 600;
+            color: #555;
+            width: 120px;
+        }
+        
+        .user-value {
+            color: #2c3e50;
+        }
+        
+        .sdk-status {
+            display: flex;
+            gap: 24px;
+            padding: 12px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .sdk-status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #2196F3;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Zoho CRM Widget (Plain HTML)</h1>
+        
+        <div class="status">
+            <div class="status-label">Status</div>
+            <div class="status-text" id="status">Initializing...</div>
+        </div>
+        
+        <div class="warning">
+            <h3>⚠️ Important Requirements:</h3>
+            <ul>
+                <li><strong>Widget Location:</strong> Must be configured as <strong>Related List</strong>, <strong>Custom Button</strong>, or <strong>Web Tab</strong></li>
+                <li><strong>PageLoad Trigger:</strong> Only fires on <strong>Detail Pages</strong> (when viewing a record)</li>
+                <li><strong>NOT for List View:</strong> Does not work on module list views</li>
+                <li><strong>Access:</strong> Module → Open Record → Your widget appears</li>
+                <li><strong>Testing:</strong> Must be accessed through Zoho CRM, not directly in browser</li>
+            </ul>
+        </div>
+        
+        <div class="sdk-status">
+            <div class="sdk-status-item">
+                <strong>SDK Loaded:</strong>
+                <span id="sdk-status">⏳ Loading...</span>
+            </div>
+            <div class="sdk-status-item">
+                <strong>Initialized:</strong>
+                <span id="init-status">❌ No</span>
+            </div>
+        </div>
+        
+        <button class="button" id="fetchBtn" onclick="manualFetchUser()" disabled>
+            🔄 Manually Fetch Current User
+        </button>
+        
+        <div class="user-info" id="userInfo">
+            <h3>👤 Current User Information</h3>
+            <div id="userData"></div>
+        </div>
+    </div>
+
+    <script>
+        let sdkLoaded = false;
+        let initialized = false;
+
+        // Update status message
+        function setStatus(message) {
+            document.getElementById('status').textContent = message;
+            console.log('Status:', message);
+        }
+
+        // Check if SDK is loaded
+        function checkSDK() {
+            if (typeof ZOHO !== 'undefined' && ZOHO.embeddedApp) {
+                sdkLoaded = true;
+                document.getElementById('sdk-status').textContent = '✅ Yes';
+                document.getElementById('fetchBtn').disabled = false;
+                setStatus('✅ SDK loaded successfully');
+                initializeWidget();
+            } else {
+                setTimeout(checkSDK, 100);
+            }
+        }
+
+        // Fetch current user
+        async function fetchCurrentUser() {
+            try {
+                setStatus('⏳ Fetching current user...');
+                
+                if (!ZOHO || !ZOHO.CRM || !ZOHO.CRM.CONFIG) {
+                    throw new Error('Zoho CRM CONFIG not available');
+                }
+
+                const response = await ZOHO.CRM.CONFIG.getCurrentUser();
+                console.log('✅ User response:', response);
+
+                if (response && response.users && response.users.length > 0) {
+                    const user = response.users[0];
+                    displayUserInfo(user);
+                    setStatus('✅ User loaded: ' + user.full_name);
+                } else {
+                    throw new Error('No user data found');
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                setStatus('❌ Error: ' + error.message);
+            }
+        }
+
+        // Display user information
+        function displayUserInfo(user) {
+            const userDataDiv = document.getElementById('userData');
+            let html = `
+                <div class="user-field">
+                    <span class="user-label">Name:</span>
+                    <span class="user-value">${user.full_name || 'N/A'}</span>
+                </div>
+                <div class="user-field">
+                    <span class="user-label">Email:</span>
+                    <span class="user-value">${user.email || 'N/A'}</span>
+                </div>
+                <div class="user-field">
+                    <span class="user-label">User ID:</span>
+                    <span class="user-value">${user.id || 'N/A'}</span>
+                </div>
+            `;
+
+            if (user.role) {
+                html += `
+                    <div class="user-field">
+                        <span class="user-label">Role:</span>
+                        <span class="user-value">${user.role.name}</span>
+                    </div>
+                `;
+            }
+
+            if (user.profile) {
+                html += `
+                    <div class="user-field">
+                        <span class="user-label">Profile:</span>
+                        <span class="user-value">${user.profile.name}</span>
+                    </div>
+                `;
+            }
+
+            userDataDiv.innerHTML = html;
+            document.getElementById('userInfo').classList.add('show');
+        }
+
+        // Manual fetch handler
+        function manualFetchUser() {
+            fetchCurrentUser();
+        }
+
+        // Initialize Zoho widget
+        function initializeWidget() {
+            try {
+                if (!ZOHO || !ZOHO.embeddedApp) {
+                    setStatus('❌ This must run inside Zoho CRM');
+                    return;
+                }
+
+                console.log('🚀 Initializing Zoho Widget...');
+
+                // Register PageLoad event BEFORE init
+                ZOHO.embeddedApp.on("PageLoad", function(data) {
+                    console.log('🎉 PageLoad triggered!', data);
+                    document.getElementById('init-status').textContent = '✅ Yes';
+                    initialized = true;
+                    
+                    const entity = data && data.Entity ? data.Entity : 'Unknown';
+                    setStatus('✅ Widget loaded! Entity: ' + entity);
+                    
+                    // Auto-fetch user on PageLoad
+                    setTimeout(() => {
+                        fetchCurrentUser();
+                    }, 500);
+                });
+
+                // Initialize SDK
+                ZOHO.embeddedApp.init();
+                console.log('✅ Init called');
+                setStatus('⏳ Initialized. Waiting for PageLoad...');
+
+            } catch (error) {
+                console.error('❌ Init error:', error);
+                setStatus('❌ Initialization failed: ' + error.message);
+            }
+        }
+
+        // Start checking for SDK
+        window.addEventListener('load', function() {
+            console.log('🔍 Checking for Zoho SDK...');
+            checkSDK();
+        });
+
+        // Immediate check as well
+        checkSDK();
+    </script>
+</body>
+</html>
