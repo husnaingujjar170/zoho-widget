@@ -36,7 +36,7 @@ export default function Home() {
       console.error("ZOHO SDK not loaded yet!");
       return;
     }
-
+console.log("fetchingg");
     const res = await window.ZOHO.CRM.API.getRecord({
       Entity: "Leads",
       RecordID: "123456789",
