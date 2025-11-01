@@ -58,7 +58,7 @@ export default function ZohoWidget() {
       }
     } catch (err) {
       console.error('❌ Error fetching current user:', err);
-      setStatus('Error fetching user data');
+      setStatus('Error fetching user data: ' + (err as Error).message);
     } finally {
       setLoading(false);
     }
@@ -79,40 +79,55 @@ export default function ZohoWidget() {
       }
 
       console.log('✅ Zoho SDK detected');
-      console.log('Available Zoho SDK methods:', Object.keys(window.ZOHO));
+      console.log('Available methods:', Object.keys(window.ZOHO));
 
-      // CRITICAL: Register event listener BEFORE calling init()
-      console.log('Registering PageLoad event listener...');
+      // METHOD 1: Traditional way - Register event BEFORE init
+      console.log('Method 1: Registering PageLoad with .on()...');
       window.ZOHO.embeddedApp.on("PageLoad", function(data: any) {
-        console.log("✅ PageLoad event triggered!", data);
+        console.log("🎉 PageLoad event triggered (Method 1)!", data);
         setStatus('Zoho Widget loaded successfully!');
-        
-        // Automatically fetch user on page load
         getCurrentUser();
       });
 
-      // Now initialize the SDK (don't await, just call it)
       console.log('Calling ZOHO.embeddedApp.init()...');
-      window.ZOHO.embeddedApp.init();
-      console.log("✅ Zoho SDK init() called successfully");
       
-      setStatus('Waiting for PageLoad event...');
+      // METHOD 2: Alternative - Pass events in init (try if Method 1 fails)
+      // Uncomment this and comment out Method 1 if needed
+      /*
+      window.ZOHO.embeddedApp.init({
+        events: {
+          PageLoad: function(data) {
+            console.log("🎉 PageLoad event triggered (Method 2)!", data);
+            setStatus('Zoho Widget loaded successfully!');
+            getCurrentUser();
+          }
+        }
+      }).then(function() {
+        console.log("✅ SDK initialized with events");
+      }).catch(function(err) {
+        console.error("❌ Init failed:", err);
+      });
+      */
+      
+      // For Method 1, just call init without parameters
+      window.ZOHO.embeddedApp.init();
+      
+      console.log("✅ Init called - Waiting for PageLoad...");
+      setStatus('Widget initialized. Open a RECORD to trigger PageLoad.');
 
     } catch (err) {
-      console.error('❌ Error initializing Zoho SDK:', err);
+      console.error('❌ Error:', err);
       setStatus('Error: ' + (err as Error).message);
     }
   };
 
-  // Initialize Zoho when SDK is loaded
   useEffect(() => {
     if (!isClient || !sdkLoaded) return;
 
-    console.log('SDK loaded, initializing Zoho...');
-    // Small delay to ensure SDK is fully ready
+    console.log('=== Starting Zoho initialization ===');
     const timer = setTimeout(() => {
       initZoho();
-    }, 100);
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [isClient, sdkLoaded]);
@@ -140,9 +155,25 @@ export default function ZohoWidget() {
         <h1>Zoho CRM Widget</h1>
         <p><strong>Status:</strong> {status}</p>
 
+        <div style={{
+          marginTop: '10px',
+          padding: '10px',
+          backgroundColor: '#fff3cd',
+          border: '1px solid #ffc107',
+          borderRadius: '4px',
+          fontSize: '14px'
+        }}>
+          <strong>⚠️ Important:</strong>
+          <ul style={{ marginTop: '5px', paddingLeft: '20px' }}>
+            <li>PageLoad only triggers on <strong>DETAIL PAGES</strong> (when you open a specific record)</li>
+            <li>Widget must be configured as <strong>Related List</strong> or <strong>Custom Button</strong></li>
+            <li>Does NOT work on List View or Web Tab widgets</li>
+            <li>Go to: Module → Open a Record → Scroll to see your widget</li>
+          </ul>
+        </div>
+
         <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
           <p>SDK Loaded: {sdkLoaded ? '✅ Yes' : '❌ No'}</p>
-          <p>Check console for detailed logs</p>
         </div>
 
         <button 
@@ -158,7 +189,7 @@ export default function ZohoWidget() {
             cursor: loading ? 'not-allowed' : 'pointer'
           }}
         >
-          {loading ? 'Loading...' : 'Fetch Current User'}
+          {loading ? 'Loading...' : 'Manually Fetch Current User'}
         </button>
 
         {currentUser && (
